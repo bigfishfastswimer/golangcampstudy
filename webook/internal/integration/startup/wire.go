@@ -7,6 +7,8 @@ import (
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms"
+	"gitee.com/geekbang/basic-go/webook/internal/service/sms/async"
 	"gitee.com/geekbang/basic-go/webook/internal/web"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	"gitee.com/geekbang/basic-go/webook/ioc"
@@ -55,6 +57,14 @@ func InitWebServer() *gin.Engine {
 		ioc.InitWebServer,
 	)
 	return gin.Default()
+}
+
+func InitAsyncSmsService(svc sms.Service) *async.Service {
+	wire.Build(thirdPartySet, repository.NewAsyncSMSRepository,
+		dao.NewGORMAsyncSmsDAO,
+		async.NewService,
+	)
+	return &async.Service{}
 }
 
 func InitArticleHandler(dao dao.ArticleDAO) *web.ArticleHandler {
