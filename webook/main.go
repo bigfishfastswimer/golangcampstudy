@@ -19,6 +19,10 @@ func main() {
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello，启动成功了！")
 	})
+	// 作业：改成 8081
+	//addr := viper.Get("addr")
+	//server.Run(":8081")
+	//server.Run(addr)
 	server.Run(":8080")
 }
 
