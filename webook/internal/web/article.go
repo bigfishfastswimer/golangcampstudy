@@ -8,6 +8,7 @@ import (
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"github.com/ecodeclub/ekit/slice"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 	"strconv"
 	"time"
@@ -258,13 +259,35 @@ func (h *ArticleHandler) PubDetail(ctx *gin.Context) {
 		return
 	}
 
-	art, err := h.svc.GetPubById(ctx, id)
+	var (
+		eg   errgroup.Group
+		art  domain.Article
+		intr domain.Interactive
+	)
+
+	eg.Go(func() error {
+		var er error
+		art, er = h.svc.GetPubById(ctx, id)
+		return er
+	})
+
+	uc := ctx.MustGet("user").(jwt.UserClaims)
+	eg.Go(func() error {
+		var er error
+		intr, er = h.intrSvc.Get(ctx, h.biz, id, uc.Uid)
+		return er
+	})
+
+	// 等待结果
+	err = eg.Wait()
 	if err != nil {
 		ctx.JSON(http.StatusOK, Result{
 			Msg:  "系统错误",
 			Code: 5,
 		})
 		h.l.Error("查询文章失败，系统错误",
+			logger.Int64("aid", id),
+			logger.Int64("uid", uc.Uid),
 			logger.Error(err))
 		return
 	}
@@ -290,6 +313,11 @@ func (h *ArticleHandler) PubDetail(ctx *gin.Context) {
 			Content:    art.Content,
 			AuthorId:   art.Author.Id,
 			AuthorName: art.Author.Name,
+			ReadCnt:    intr.ReadCnt,
+			CollectCnt: intr.CollectCnt,
+			LikeCnt:    intr.LikeCnt,
+			Liked:      intr.Liked,
+			Collected:  intr.Collected,
 
 			Status: art.Status.ToUint8(),
 			Ctime:  art.Ctime.Format(time.DateTime),
