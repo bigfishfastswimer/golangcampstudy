@@ -1,7 +1,20 @@
 package logger
 
+var DEBUG = false
+
 func Error(err error) Field {
 	return Field{Key: "error", Val: err}
+}
+
+func SafeString(l LoggerV1, key string, val string) Field {
+	//if l.Level() == "DEBUG"{
+	//
+	//}
+	if DEBUG {
+		return Field{Key: key, Val: val}
+	} else {
+		return Field{Key: key, Val: "****"}
+	}
 }
 
 func String(key string, val string) Field {
