@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	"gitee.com/geekbang/basic-go/webook/internal/web/jwt"
@@ -16,6 +17,7 @@ type ArticleHandler struct {
 	svc     service.ArticleService
 	intrSvc service.InteractiveService
 	l       logger.LoggerV1
+	biz     string
 }
 
 func NewArticleHandler(l logger.LoggerV1,
@@ -25,6 +27,7 @@ func NewArticleHandler(l logger.LoggerV1,
 		l:       l,
 		svc:     svc,
 		intrSvc: intrSvc,
+		biz:     "article",
 	}
 }
 
@@ -263,7 +266,18 @@ func (h *ArticleHandler) PubDetail(ctx *gin.Context) {
 		return
 	}
 
-	err = h.intrSvc.IncrReadCnt(ctx, art.Id)
+	go func() {
+		// 1. 如果你想摆脱原本主链路的超时控制，你就创建一个新的
+		// 2. 如果你不想，你就用 ctx
+		newCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		er := h.intrSvc.IncrReadCnt(newCtx, h.biz, art.Id)
+		if er != nil {
+			h.l.Error("更新阅读数失败",
+				logger.Int64("aid", art.Id),
+				logger.Error(err))
+		}
+	}()
 
 	ctx.JSON(http.StatusOK, Result{
 		Data: ArticleVo{

@@ -15,6 +15,10 @@ type GORMInteractiveDAO struct {
 	db *gorm.DB
 }
 
+func NewGORMInteractiveDAO(db *gorm.DB) InteractiveDAO {
+	return &GORMInteractiveDAO{db: db}
+}
+
 func (dao *GORMInteractiveDAO) IncrReadCnt(ctx context.Context, biz string, bizId int64) error {
 	now := time.Now().UnixMilli()
 	return dao.db.WithContext(ctx).Clauses(clause.OnConflict{
