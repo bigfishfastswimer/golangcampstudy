@@ -2,6 +2,7 @@ package web
 
 import (
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
+	"gitee.com/geekbang/basic-go/webook/internal/errs"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	ijwt "gitee.com/geekbang/basic-go/webook/internal/web/jwt"
 	regexp "github.com/dlclark/regexp2"
@@ -199,7 +200,10 @@ func (h *UserHandler) SignUp(ctx *gin.Context) {
 	case nil:
 		ctx.String(http.StatusOK, "注册成功")
 	case service.ErrDuplicateEmail:
-		ctx.String(http.StatusOK, "邮箱冲突，请换一个")
+		ctx.JSON(http.StatusOK, Result{
+			Code: errs.UserDuplicateEmail,
+			Msg:  "邮箱冲突",
+		})
 	default:
 		ctx.String(http.StatusOK, "系统错误")
 	}
