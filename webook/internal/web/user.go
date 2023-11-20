@@ -135,20 +135,20 @@ func (h *UserHandler) SignUp(ctx *gin.Context, req SignUpReq) (ginx.Result, erro
 	if err != nil {
 		ctx.String(http.StatusOK, "系统错误")
 		return ginx.Result{
-			Code: 5,
+			Code: errs.UserInternalServerError,
 			Msg:  "系统错误",
 		}, err
 	}
 	if !isEmail {
 		return ginx.Result{
-			Code: 4,
+			Code: errs.UserInvalidInput,
 			Msg:  "非法邮箱格式",
 		}, nil
 	}
 
 	if req.Password != req.ConfirmPassword {
 		return ginx.Result{
-			Code: 4,
+			Code: errs.UserInvalidInput,
 			Msg:  "两次输入的密码不相等",
 		}, nil
 	}
@@ -156,13 +156,13 @@ func (h *UserHandler) SignUp(ctx *gin.Context, req SignUpReq) (ginx.Result, erro
 	isPassword, err := h.passwordRexExp.MatchString(req.Password)
 	if err != nil {
 		return ginx.Result{
-			Code: 5,
+			Code: errs.UserInternalServerError,
 			Msg:  "系统错误",
 		}, err
 	}
 	if !isPassword {
 		return ginx.Result{
-			Code: 4,
+			Code: errs.UserInvalidInput,
 			Msg:  "密码必须包含字母、数字、特殊字符",
 		}, nil
 	}
@@ -183,7 +183,8 @@ func (h *UserHandler) SignUp(ctx *gin.Context, req SignUpReq) (ginx.Result, erro
 		}, nil
 	default:
 		return ginx.Result{
-			Msg: "系统错误",
+			Code: errs.UserInternalServerError,
+			Msg:  "系统错误",
 		}, err
 	}
 }
