@@ -107,7 +107,6 @@ func (a *ArticleHandler) PubDetail(ctx *gin.Context) {
 	var eg errgroup.Group
 	var art domain.Article
 	eg.Go(func() error {
-
 		art, err = a.svc.GetPublishedById(ctx, id, uc.Id)
 		return err
 	})

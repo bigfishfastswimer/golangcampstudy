@@ -20,6 +20,15 @@ type Article struct {
 	//
 }
 
+func (a *Article) MarkedAsPrivate() {
+	a.Status = ArticleStatusPrivate
+}
+
+//func (a *Article) Publish() {
+//	a.repo.Save(a)
+//	a.liveRepo.Save(a)
+//}
+
 func (a Article) Abstract() string {
 	// 摘要我们取前几句。
 	// 要考虑一个中文问题
