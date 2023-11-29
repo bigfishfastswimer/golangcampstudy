@@ -3,6 +3,7 @@
 package startup
 
 import (
+	article3 "gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	article2 "gitee.com/geekbang/basic-go/webook/internal/repository/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
@@ -16,7 +17,10 @@ import (
 	"github.com/google/wire"
 )
 
-var thirdProvider = wire.NewSet(InitRedis, InitTestDB, InitLog)
+var thirdProvider = wire.NewSet(InitRedis,
+	NewSyncProducer,
+	InitKafka,
+	InitTestDB, InitLog)
 var userSvcProvider = wire.NewSet(
 	dao.NewUserDAO,
 	cache.NewUserCache,
@@ -38,6 +42,8 @@ func InitWebServer() *gin.Engine {
 		thirdProvider,
 		userSvcProvider,
 		articlSvcProvider,
+
+		article3.NewKafkaProducer,
 		cache.NewCodeCache,
 		repository.NewCodeRepository,
 		// service 部分
@@ -68,6 +74,7 @@ func InitArticleHandler(dao article.ArticleDAO) *web.ArticleHandler {
 		//userSvcProvider,
 		//cache.NewRedisArticleCache,
 		//wire.InterfaceValue(new(article.ArticleDAO), dao),
+		article3.NewKafkaProducer,
 		article2.NewArticleRepository,
 		service.NewArticleService,
 		web.NewArticleHandler)

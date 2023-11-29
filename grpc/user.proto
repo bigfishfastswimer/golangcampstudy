@@ -36,6 +36,7 @@ enum Gender {
 
 service UserService {
   rpc GetById(GetByIdRequest) returns (GetByIdResponse);
+  rpc GetByIdV1(GetByIdRequest) returns (GetByIdResponse);
 }
 
 message GetByIdRequest {
