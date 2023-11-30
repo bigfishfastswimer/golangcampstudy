@@ -18,6 +18,10 @@ type RankingJob struct {
 
 	localLock *sync.Mutex
 	lock      *rlock.Lock
+
+	// 作业提示
+	// 随机生成一个，就代表当前负载。你可以每隔一分钟生成一个
+	load int32
 }
 
 func NewRankingJob(
