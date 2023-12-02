@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"gitee.com/geekbang/basic-go/webook/interactive/service"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"github.com/ecodeclub/ekit/queue"
@@ -18,7 +19,7 @@ type RankingService interface {
 
 type BatchRankingService struct {
 	artSvc    ArticleService
-	intrSvc   InteractiveService
+	intrSvc   service.InteractiveService
 	repo      repository.RankingRepository
 	batchSize int
 	n         int
@@ -29,7 +30,7 @@ type BatchRankingService struct {
 	load int64
 }
 
-func NewBatchRankingService(artSvc ArticleService, intrSvc InteractiveService) RankingService {
+func NewBatchRankingService(artSvc ArticleService, intrSvc service.InteractiveService) RankingService {
 	return &BatchRankingService{
 		artSvc:    artSvc,
 		intrSvc:   intrSvc,

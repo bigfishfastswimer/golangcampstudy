@@ -1,6 +1,7 @@
 package ioc
 
 import (
+	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	promsdk "github.com/prometheus/client_golang/prometheus"
@@ -105,6 +106,11 @@ func InitDB(l logger.LoggerV1) *gorm.DB {
 	//})
 
 	err = dao.InitTable(db)
+	if err != nil {
+		panic(err)
+	}
+
+	err = dao2.InitTable(db)
 	if err != nil {
 		panic(err)
 	}

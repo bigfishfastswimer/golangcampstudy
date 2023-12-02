@@ -1,8 +1,8 @@
-package article
+package events
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/repository"
+	"gitee.com/geekbang/basic-go/webook/interactive/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"gitee.com/geekbang/basic-go/webook/pkg/saramax"
 	"github.com/IBM/sarama"

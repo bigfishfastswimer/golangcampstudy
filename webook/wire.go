@@ -3,6 +3,11 @@
 package main
 
 import (
+	"gitee.com/geekbang/basic-go/webook/interactive/events"
+	repository2 "gitee.com/geekbang/basic-go/webook/interactive/repository"
+	cache2 "gitee.com/geekbang/basic-go/webook/interactive/repository/cache"
+	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
+	service2 "gitee.com/geekbang/basic-go/webook/interactive/service"
 	"gitee.com/geekbang/basic-go/webook/internal/events/article"
 	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	article2 "gitee.com/geekbang/basic-go/webook/internal/repository/article"
@@ -17,10 +22,10 @@ import (
 )
 
 var interactiveSvcProvider = wire.NewSet(
-	service.NewInteractiveService,
-	repository.NewCachedInteractiveRepository,
-	dao.NewGORMInteractiveDAO,
-	cache.NewRedisInteractiveCache,
+	service2.NewInteractiveService,
+	repository2.NewCachedInteractiveRepository,
+	dao2.NewGORMInteractiveDAO,
+	cache2.NewRedisInteractiveCache,
 )
 
 var rankingServiceSet = wire.NewSet(
@@ -32,7 +37,7 @@ var rankingServiceSet = wire.NewSet(
 func InitWebServer() *App {
 	wire.Build(
 		// 最基础的第三方依赖
-		ioc.InitDB, ioc.InitRedis,
+		ioc.InitDB, ioc.InitRedis, ioc.InitRLockClient,
 		ioc.InitLogger,
 		ioc.InitKafka,
 		ioc.NewConsumers,
@@ -44,7 +49,7 @@ func InitWebServer() *App {
 		ioc.InitRankingJob,
 
 		// consumer
-		article.NewInteractiveReadEventBatchConsumer,
+		events.NewInteractiveReadEventBatchConsumer,
 		article.NewKafkaProducer,
 
 		// 初始化 DAO

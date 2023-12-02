@@ -2,7 +2,6 @@ package article
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"gitee.com/geekbang/basic-go/webook/pkg/saramax"
 	"github.com/IBM/sarama"
@@ -10,23 +9,20 @@ import (
 
 type HistoryReadEventConsumer struct {
 	client sarama.Client
-	repo   repository.InteractiveRepository
 	l      logger.LoggerV1
 }
 
 func NewHistoryReadEventConsumer(
 	client sarama.Client,
-	l logger.LoggerV1,
-	repo repository.InteractiveRepository) *HistoryReadEventConsumer {
+	l logger.LoggerV1) *HistoryReadEventConsumer {
 	return &HistoryReadEventConsumer{
 		client: client,
 		l:      l,
-		repo:   repo,
 	}
 }
 
 func (r *HistoryReadEventConsumer) Start() error {
-	cg, err := sarama.NewConsumerGroupFromClient("interactive",
+	cg, err := sarama.NewConsumerGroupFromClient("history_record",
 		r.client)
 	if err != nil {
 		return err
