@@ -52,6 +52,7 @@ func InitGinMiddlewares(redisClient redis.Cmdable,
 		Name:      "biz_code",
 		Help:      "统计业务错误码",
 	})
+
 	return []gin.HandlerFunc{
 		cors.New(cors.Config{
 			//AllowAllOrigins: true,
@@ -78,7 +79,7 @@ func InitGinMiddlewares(redisClient redis.Cmdable,
 		pb.BuildResponseTime(),
 		pb.BuildActiveRequest(),
 		otelgin.Middleware("webook"),
-		//ratelimit.NewBuilder(limiter.NewRedisSlidingWindowLimiter(redisClient, time.Second, 1000)).Build(),
+		// ratelimit.NewBuilder(limiter.NewRedisSlidingWindowLimiter(redisClient, time.Second, 1000)).Build(),
 		//middleware.NewLogMiddlewareBuilder(func(ctx context.Context, al middleware.AccessLog) {
 		//	l.Debug("", logger.Field{Key: "req", Val: al})
 		//}).AllowReqBody().AllowRespBody().Build(),
