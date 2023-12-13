@@ -1,13 +1,15 @@
-package article
+package events
 
 import (
 	"context"
-	"gitee.com/geekbang/basic-go/webook/internal/repository"
+	"gitee.com/geekbang/basic-go/webook/interactive/repository"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
 	"gitee.com/geekbang/basic-go/webook/pkg/samarax"
 	"github.com/IBM/sarama"
 	"time"
 )
+
+const TopicReadEvent = "article_read"
 
 type InteractiveReadEventConsumer struct {
 	repo   repository.InteractiveRepository
@@ -50,6 +52,11 @@ func (i *InteractiveReadEventConsumer) Start() error {
 		}
 	}()
 	return err
+}
+
+type ReadEvent struct {
+	Aid int64
+	Uid int64
 }
 
 //func (i *InteractiveReadEventConsumer) BatchConsume(msgs []*sarama.ConsumerMessage,

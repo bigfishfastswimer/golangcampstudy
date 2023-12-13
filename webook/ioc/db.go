@@ -1,6 +1,7 @@
 package ioc
 
 import (
+	dao2 "gitee.com/geekbang/basic-go/webook/interactive/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/dao"
 	"gitee.com/geekbang/basic-go/webook/pkg/gormx"
 	"gitee.com/geekbang/basic-go/webook/pkg/logger"
@@ -74,6 +75,10 @@ func InitDB(l logger.LoggerV1) *gorm.DB {
 	}
 
 	err = dao.InitTables(db)
+	if err != nil {
+		panic(err)
+	}
+	err = dao2.InitTables(db)
 	if err != nil {
 		panic(err)
 	}
