@@ -29,7 +29,7 @@ func (dao *GORMInteractiveDAO) GetByIds(ctx context.Context, biz string, ids []i
 	var res []Interactive
 	err := dao.db.WithContext(ctx).
 		Where("biz = ? AND biz_id IN ?", biz, ids).
-		First(&res).Error
+		Find(&res).Error
 	return res, err
 }
 
