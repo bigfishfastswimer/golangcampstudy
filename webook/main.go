@@ -18,7 +18,7 @@ import (
 
 // 因为你没有传入 -tags=wireinject, 所以你最终用的是 wire_gen 中的定义。
 func main() {
-	initViperV1()
+	initViperWatch()
 	initLogger()
 	tpCancel := ioc.InitOTEL()
 	defer func() {
@@ -91,9 +91,6 @@ func initViperWatch() {
 	viper.SetConfigType("yaml")
 	viper.SetConfigFile(*cfile)
 	viper.WatchConfig()
-	viper.OnConfigChange(func(in fsnotify.Event) {
-		log.Println(viper.GetString("test.key"))
-	})
 	// 读取配置
 	err := viper.ReadInConfig()
 	if err != nil {
