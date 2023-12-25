@@ -166,12 +166,82 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 
 func (h *UserHandler) Edit(ctx *gin.Context) {
 	// 嵌入一段刷新过期时间的代码
+	type Req struct {
+		Nickname string `json:"nickname"`
+		Birthday string `json:"birthday"`
+		AboutMe  string `json:"aboutMe"`
+	}
+	var req Req
+	if err := ctx.Bind(&req); err != nil {
+		return
+	}
+	//sess := sessions.Default(ctx)
+	//userID, ok := sess.Get("userId").(int64)
+	//if !ok {
+	//	ctx.String(http.StatusUnauthorized, "未找到用户ID")
+	//}
+	uc, ok := ctx.MustGet("user").(UserClaims)
+	if !ok {
+		//ctx.String(http.StatusOK, "系统错误")
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	birthday, err := time.Parse(time.DateOnly, req.Birthday)
+	if err != nil {
+		ctx.String(http.StatusOK, "生日格式不对")
+		return
+	}
+
+	err = h.svc.UpdateNonSensitiveInfo(ctx, domain.User{
+		Id:       uc.Uid,
+		Nickname: req.Nickname,
+		Birthday: birthday,
+		AboutMe:  req.AboutMe,
+	})
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, "更新用户信息失败")
+	}
+	//u, err := h.svc.FindById(ctx, userID)
+	if err != nil {
+		ctx.String(http.StatusOK, "系统异常")
+		return
+	}
+	ctx.String(http.StatusOK, "用户信息修改成功！")
 }
 
 func (h *UserHandler) Profile(ctx *gin.Context) {
 	//us := ctx.MustGet("user").(UserClaims)
 	ctx.String(http.StatusOK, "这是 profile")
 	// 嵌入一段刷新过期时间的代码
+	//sess := sessions.Default(ctx)
+	//userID, ok := sess.Get("userId").(int64)
+
+	uc, ok := ctx.MustGet("user").(UserClaims)
+	if !ok {
+		//ctx.String(http.StatusOK, "系统错误")
+		ctx.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
+	u, err := h.svc.FindById(ctx, uc.Uid)
+	if err != nil {
+		ctx.String(http.StatusOK, "查找用户信息失败")
+		return
+	}
+
+	type User struct {
+		Nickname string `json:"nickname"`
+		Email    string `json:"email"`
+		AboutMe  string `json:"aboutMe"`
+		Birthday string `json:"birthday"`
+	}
+	ctx.JSON(http.StatusOK, User{
+		Nickname: u.Nickname,
+		Email:    u.Email,
+		AboutMe:  u.AboutMe,
+		Birthday: u.Birthday.Format(time.DateOnly),
+	})
 }
 
 var JWTKey = []byte("k6CswdUm77WKcbM68UQUuxVsHSpTCwgK")

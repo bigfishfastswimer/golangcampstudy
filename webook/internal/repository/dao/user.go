@@ -44,14 +44,39 @@ func (dao *UserDAO) FindByEmail(ctx context.Context, email string) (User, error)
 	return u, err
 }
 
+func (dao *UserDAO) FindById(ctx context.Context, uid int64) (User, error) {
+	var res User
+	//这里的 First 方法被用来执行查询，寻找满足 Where 条件的第一条记录。查询的结果会被填充到 res 变量中。
+	//&res 表示传递 res 的地址，这样 GORM 可以直接在这个变量中填充数据。
+	err := dao.db.WithContext(ctx).Where("id = ?", uid).First(&res).Error
+	return res, err
+}
+
+func (dao *UserDAO) UpdateById(ctx context.Context, entity User) error {
+	// 这种写法依赖于 GORM 的零值和主键更新特性
+	// Update 非零值 WHERE id = ?
+	//return dao.db.WithContext(ctx).Updates(&entity).Error
+	return dao.db.WithContext(ctx).Model(&entity).Where("id = ?", entity.Id).Updates(
+		map[string]any{
+			"utime":    time.Now().UnixMilli(),
+			"nickname": entity.Nickname,
+			"birthday": entity.Birthday,
+			"about_me": entity.AboutMe,
+		}).Error
+}
+
 type User struct {
+	AboutMe string `gorm:"type=varchar(4096)"`
+	// YYYY-MM-DD
+	Birthday int64
 	Id       int64  `gorm:"primaryKey,autoIncrement"`
 	Email    string `gorm:"unique"`
 	Password string
 
 	// 时区，UTC 0 的毫秒数
 	// 创建时间
-	Ctime int64
+	Ctime    int64
+	Nickname string `gorm:"type=varchar(128)"`
 	// 更新时间
 	Utime int64
 
