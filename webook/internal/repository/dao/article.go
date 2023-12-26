@@ -25,6 +25,8 @@ type ArticleGORMDAO struct {
 }
 
 func (a *ArticleGORMDAO) ListPub(ctx context.Context, start time.Time, offset int, limit int) ([]PublishedArticle, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
+	defer cancel()
 	var res []PublishedArticle
 	const ArticleStatusPublished = 2
 	err := a.db.WithContext(ctx).

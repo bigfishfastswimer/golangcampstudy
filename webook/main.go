@@ -60,6 +60,7 @@ func initPrometheus() {
 }
 
 func initLogger() {
+	zap.NewProductionConfig()
 	logger, err := zap.NewDevelopment()
 	if err != nil {
 		panic(err)
