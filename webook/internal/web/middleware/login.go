@@ -13,7 +13,7 @@ type LoginMiddlewareBuilder struct {
 }
 
 func (m *LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
-	// 注册一下这个类型
+	// 注册一下这个类型，转数据类型
 	gob.Register(time.Now())
 	return func(ctx *gin.Context) {
 		path := ctx.Request.URL.Path
@@ -36,11 +36,11 @@ func (m *LoginMiddlewareBuilder) CheckLogin() gin.HandlerFunc {
 		const updateTimeKey = "update_time"
 		// 试着拿出上一次刷新时间
 		val := sess.Get(updateTimeKey)
-		lastUpdateTime, ok := val.(time.Time)
+		lastUpdateTime, ok := val.(time.Time) // 类型的断言 语法
 		if val == nil || !ok || now.Sub(lastUpdateTime) > time.Second*10 {
-			// 你这是第一次进来
+			// 你这是第一次进来 ｜｜ 断言结果不为 nil/true，｜｜ 前后时间长度超10秒
 			sess.Set(updateTimeKey, now)
-			sess.Set("userId", userId)
+			sess.Set("userId", userId) //session 要重新定义，因为他是覆盖的方式
 			err := sess.Save()
 			if err != nil {
 				// 打日志

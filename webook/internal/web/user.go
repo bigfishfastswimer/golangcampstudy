@@ -112,7 +112,8 @@ func (h *UserHandler) LoginJWT(ctx *gin.Context) {
 	switch err {
 	case nil:
 		uc := UserClaims{
-			Uid: u.Id,
+			Uid:       u.Id,
+			UserAgent: ctx.GetHeader("User-Agent"),
 			RegisteredClaims: jwt.RegisteredClaims{
 				// 1 分钟过期
 				ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute)),
@@ -145,10 +146,10 @@ func (h *UserHandler) Login(ctx *gin.Context) {
 	switch err {
 	case nil:
 		sess := sessions.Default(ctx)
-		sess.Set("userId", u.Id)
+		sess.Set("userId", u.Id) // 数据库里面有个 userId 的key，所对应的指是 ”u.Id“
 		sess.Options(sessions.Options{
 			// 十分钟
-			MaxAge: 30,
+			MaxAge: 900,
 		})
 		err = sess.Save()
 		if err != nil {
@@ -177,5 +178,6 @@ var JWTKey = []byte("k6CswdUm77WKcbM68UQUuxVsHSpTCwgK")
 
 type UserClaims struct {
 	jwt.RegisteredClaims
-	Uid int64
+	Uid       int64
+	UserAgent string
 }

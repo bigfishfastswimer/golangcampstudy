@@ -12,6 +12,7 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"strings"
@@ -75,7 +76,7 @@ func initWebServer() *gin.Engine {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	})
-
+	// 限流
 	server.Use(ratelimit.NewBuilder(redisClient,
 		time.Second, 1).Build())
 
@@ -95,6 +96,8 @@ func useSession(server *gin.Engine) {
 	// 直接存 cookie
 	store := cookie.NewStore([]byte("secret"))
 	// 基于内存的实现
+	// 第一个参数是authentication key， 最好的是32 或者64 位子， 第二个参数 encryptionkey
+	// 搜索生成64 密码/密钥, 注意特殊字符。 memstore 适用于单实例的单体应用
 	//store := memstore.NewStore([]byte("k6CswdUm75WKcbM68UQUuxVsHSpTCwgK"),
 	//	[]byte("eF1`yQ9>yT1`tH1,sJ0.zD8;mZ9~nC6("))
 	//store, err := redis.NewStore(16, "tcp",

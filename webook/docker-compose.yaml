@@ -13,12 +13,13 @@ services:
     ports:
 #      - 外部访问用 13316
       - 13316:3306
-
+# 适用于 分布式session 存储
   redis:
     image: "bitnami/redis:latest"
     restart: always
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+    #端口映射
     ports:
       - '6379:6379'
 
