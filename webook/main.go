@@ -21,15 +21,15 @@ import (
 )
 
 func main() {
-	db := initDB()
-
-	server := initWebServer()
-	initUserHdl(db, server)
-	//server := gin.Default()
+	//db := initDB()
+	//
+	//server := initWebServer()
+	//initUserHdl(db, server)
+	server := gin.Default()
 	server.GET("/hello", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "hello，启动成功了！")
 	})
-	server.Run(":8080")
+	server.Run(":8081")
 }
 
 func initUserHdl(db *gorm.DB, server *gin.Engine) {

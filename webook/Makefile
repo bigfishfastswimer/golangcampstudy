@@ -1,6 +1,6 @@
 .PHONY: docker
 clean:
-	@echo "cleaning local build" ;; rm webook || true
+	@echo "cleaning local build" && rm webook || true
 	@go mod tidy
 docker: clean
 	@GOOS=linux GOARCH=arm go build -o webook .
