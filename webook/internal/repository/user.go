@@ -106,6 +106,8 @@ func (repo *UserRepository) FindByIdV1(ctx context.Context, uid int64) (domain.U
 	switch err {
 	case nil:
 		return du, nil
+		// interview questions
+		// how to handle two different scenarios: 1 conservative 2 progressive
 	case cache.ErrKeyNotExist:
 		u, err := repo.dao.FindById(ctx, uid)
 		if err != nil {
@@ -126,7 +128,7 @@ func (repo *UserRepository) FindByIdV1(ctx context.Context, uid int64) (domain.U
 		}
 		return du, nil
 	default:
-		// 接近降级的写法
+		// conservative approach；接近降级的写法 // 保护数据库 cause by  cache breakdown
 		return domain.User{}, err
 	}
 
