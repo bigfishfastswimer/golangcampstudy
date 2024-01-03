@@ -1,11 +1,11 @@
 package web
 
 import (
+	"bytes"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/service"
 	svcmocks "gitee.com/geekbang/basic-go/webook/internal/service/mocks"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/mock/gomock"
 	"net/http"
@@ -19,6 +19,10 @@ func TestHello(t *testing.T) {
 }
 
 func TestUserProfile(t *testing.T) {
+	birthday, err := time.Parse(time.DateOnly, "2000-11-11")
+	if err != nil {
+		t.Fatal(err)
+	}
 	testCases := []struct {
 		name       string
 		mock       func(ctrl *gomock.Controller) (service.UserService, service.CodeService)
@@ -29,10 +33,6 @@ func TestUserProfile(t *testing.T) {
 		{
 			name: "test profile",
 			mock: func(ctrl *gomock.Controller) (service.UserService, service.CodeService) {
-				birthday, err := time.Parse(time.DateOnly, "2000-11-11")
-				if err != nil {
-					t.Fatal(err)
-				}
 				userSvc := svcmocks.NewMockUserService(ctrl)
 				userSvc.EXPECT().FindById(gomock.Any(), int64(1)).Return(domain.User{
 					Nickname: "Fisher",
@@ -40,24 +40,16 @@ func TestUserProfile(t *testing.T) {
 					AboutMe:  "this is a test user",
 					Birthday: birthday,
 				}, nil)
-				codeSvc := svcmocks.NewMockCodeService(ctrl)
-				return userSvc, codeSvc
+				return userSvc, nil
 			},
 			reqBuilder: func(t *testing.T) *http.Request {
-				userClaims := UserClaims{
-					RegisteredClaims: jwt.RegisteredClaims{},
-					Uid:              1,
-					UserAgent:        "test",
-				}
-				ctx, _ := gin.CreateTestContext(httptest.NewRecorder())
-				req, err := http.NewRequest(http.MethodGet, "/users/profile", nil)
-				ctx.Request = req
-				ctx.Set("user", userClaims)
+				req, err := http.NewRequest(http.MethodGet, "/users/profile", bytes.NewReader([]byte("")))
 				req.Header.Set("Content-Type", "application/json")
 				assert.NoError(t, err)
 				return req
 			},
-			expectCode: 200,
+			expectCode: http.StatusOK,
+			expectBody: "{\"nickname\":\"Fisher\",\"email\":\"12334@gmail.com\",\"aboutMe\":\"this is a test user\",\"birthday\":\"2000-11-11\"}",
 		},
 	}
 
@@ -65,16 +57,28 @@ func TestUserProfile(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
+
+			// construct handler
 			userSvc, codeSvc := tc.mock(ctrl)
 			hdl := NewUserHandler(userSvc, codeSvc)
 
+			// prepare server, register routes
 			server := gin.Default()
+			server.Use(func(ctx *gin.Context) {
+				ctx.Set("user", UserClaims{
+					Uid: 1,
+				})
+			})
 			hdl.RegisterRoutes(server)
 
+			// prepare request and http recorder
 			req := tc.reqBuilder(t)
 			recorder := httptest.NewRecorder()
 
+			//start mock server
 			server.ServeHTTP(recorder, req)
+
+			// execute test
 			assert.Equal(t, tc.expectCode, recorder.Code)
 			assert.Equal(t, tc.expectBody, recorder.Body.String())
 
