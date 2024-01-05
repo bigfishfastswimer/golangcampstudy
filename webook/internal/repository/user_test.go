@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"gitee.com/geekbang/basic-go/webook/internal/domain"
 	"gitee.com/geekbang/basic-go/webook/internal/repository/cache"
 	cachemocks "gitee.com/geekbang/basic-go/webook/internal/repository/cache/mocks"
@@ -188,6 +189,39 @@ func TestCachedUserRepository_FindById(t *testing.T) {
 			user, err := svc.FindById(tc.ctx, tc.uid)
 			assert.Equal(t, tc.wantErr, err)
 			assert.Equal(t, tc.wantUser, user)
+		})
+	}
+}
+
+func TestCachedUserRepository_FindById1(t *testing.T) {
+	type fields struct {
+		dao   dao.UserDAO
+		cache cache.UserCache
+	}
+	type args struct {
+		ctx context.Context
+		uid int64
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    domain.User
+		wantErr assert.ErrorAssertionFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &CachedUserRepository{
+				dao:   tt.fields.dao,
+				cache: tt.fields.cache,
+			}
+			got, err := repo.FindById(tt.args.ctx, tt.args.uid)
+			if !tt.wantErr(t, err, fmt.Sprintf("FindById(%v, %v)", tt.args.ctx, tt.args.uid)) {
+				return
+			}
+			assert.Equalf(t, tt.want, got, "FindById(%v, %v)", tt.args.ctx, tt.args.uid)
 		})
 	}
 }
