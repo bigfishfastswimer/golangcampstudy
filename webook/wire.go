@@ -26,7 +26,7 @@ func InitWebookServer() *gin.Engine {
 
 		// initialize repository
 		repository.NewCodeRepository,
-		repository.NewUserRepository,
+		repository.NewCachedUserRepository,
 
 		// service initialization
 		ioc.InitSMSService,

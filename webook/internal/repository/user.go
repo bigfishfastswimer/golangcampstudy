@@ -15,9 +15,19 @@ var (
 	ErrUserNotFound  = dao.ErrRecordNotFound
 )
 
-type UserRepository struct {
-	dao   *dao.UserDAO
-	cache *cache.UserCache
+type UserRepository interface {
+	Create(ctx context.Context, u domain.User) error
+	FindByEmail(ctx context.Context, email string) (domain.User, error)
+	FindById(ctx context.Context, uid int64) (domain.User, error)
+	UpdateNonZeroFields(ctx context.Context, user domain.User) error
+	FindByPhone(ctx context.Context, phone string) (domain.User, error)
+}
+
+type CachedUserRepository struct {
+	//dao *dao.GormUserDAO
+	//cache *cache.RedisUserCache
+	dao   dao.UserDAO
+	cache cache.UserCache // refactor to using cache interface
 }
 
 type DBConfig struct {
@@ -29,13 +39,13 @@ type CacheConfig struct {
 }
 
 // NewUserRepositoryV2 强耦合到了 JSON
-//func NewUserRepositoryV2(cfgBytes string) *UserRepository {
+//func NewUserRepositoryV2(cfgBytes string) *CachedUserRepository {
 //	var cfg DBConfig
 //	err := json.Unmarshal([]byte(cfgBytes), &cfg)
 //}
 
 // NewUserRepositoryV1 强耦合（跨层的），严重缺乏扩展性
-//func NewUserRepositoryV1(dbCfg DBConfig, cCfg CacheConfig) (*UserRepository, error) {
+//func NewUserRepositoryV1(dbCfg DBConfig, cCfg CacheConfig) (*CachedUserRepository, error) {
 //	db, err := gorm.Open(mysql.Open(dbCfg.DSN))
 //	if err != nil {
 //		return nil, err
@@ -44,25 +54,25 @@ type CacheConfig struct {
 //	uc := cache.NewUserCache(redis.NewClient(&redis.Options{
 //		Addr: cCfg.Addr,
 //	}))
-//	return &UserRepository{
+//	return &CachedUserRepository{
 //		dao:   ud,
 //		cache: uc,
 //	}, nil
 //}
 
-func NewUserRepository(dao *dao.UserDAO,
-	c *cache.UserCache) *UserRepository {
-	return &UserRepository{
+func NewCachedUserRepository(dao dao.UserDAO,
+	c cache.UserCache) UserRepository {
+	return &CachedUserRepository{
 		dao:   dao,
 		cache: c,
 	}
 }
 
-func (repo *UserRepository) Create(ctx context.Context, u domain.User) error {
+func (repo *CachedUserRepository) Create(ctx context.Context, u domain.User) error {
 	return repo.dao.Insert(ctx, repo.toEntity(u))
 }
 
-func (repo *UserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
+func (repo *CachedUserRepository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
 	u, err := repo.dao.FindByEmail(ctx, email)
 	if err != nil {
 		return domain.User{}, err
@@ -70,7 +80,7 @@ func (repo *UserRepository) FindByEmail(ctx context.Context, email string) (doma
 	return repo.toDomain(u), nil
 }
 
-func (repo *UserRepository) toDomain(u dao.User) domain.User {
+func (repo *CachedUserRepository) toDomain(u dao.DaoUser) domain.User {
 	return domain.User{
 		Id:       u.Id,
 		Email:    u.Email.String,
@@ -82,8 +92,8 @@ func (repo *UserRepository) toDomain(u dao.User) domain.User {
 	}
 }
 
-func (repo *UserRepository) toEntity(u domain.User) dao.User {
-	return dao.User{
+func (repo *CachedUserRepository) toEntity(u domain.User) dao.DaoUser {
+	return dao.DaoUser{
 		Id: u.Id,
 		Email: sql.NullString{
 			String: u.Email,
@@ -100,12 +110,12 @@ func (repo *UserRepository) toEntity(u domain.User) dao.User {
 	}
 }
 
-func (repo *UserRepository) UpdateNonZeroFields(ctx context.Context,
+func (repo *CachedUserRepository) UpdateNonZeroFields(ctx context.Context,
 	user domain.User) error {
 	return repo.dao.UpdateById(ctx, repo.toEntity(user))
 }
 
-func (repo *UserRepository) FindById(ctx context.Context, uid int64) (domain.User, error) {
+func (repo *CachedUserRepository) FindById(ctx context.Context, uid int64) (domain.User, error) {
 	du, err := repo.cache.Get(ctx, uid)
 	// 只要 err 为 nil，就返回
 	if err == nil {
@@ -137,7 +147,7 @@ func (repo *UserRepository) FindById(ctx context.Context, uid int64) (domain.Use
 	return du, nil
 }
 
-func (repo *UserRepository) FindByIdV1(ctx context.Context, uid int64) (domain.User, error) {
+func (repo *CachedUserRepository) FindByIdV1(ctx context.Context, uid int64) (domain.User, error) {
 	du, err := repo.cache.Get(ctx, uid)
 	// 只要 err 为 nil，就返回
 	switch err {
@@ -155,7 +165,6 @@ func (repo *UserRepository) FindByIdV1(ctx context.Context, uid int64) (domain.U
 		//		log.Println(err)
 		//	}
 		//}()
-
 		err = repo.cache.Set(ctx, du)
 		if err != nil {
 			// 网络崩了，也可能是 redis 崩了
@@ -166,10 +175,9 @@ func (repo *UserRepository) FindByIdV1(ctx context.Context, uid int64) (domain.U
 		// 接近降级的写法
 		return domain.User{}, err
 	}
-
 }
 
-func (repo *UserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
+func (repo *CachedUserRepository) FindByPhone(ctx context.Context, phone string) (domain.User, error) {
 	u, err := repo.dao.FindByPhone(ctx, phone)
 	if err != nil {
 		return domain.User{}, err
